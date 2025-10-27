@@ -109,3 +109,4 @@ data/
 mlruns/
 /lgbm_model.pkl
 /tfidf_vectorizer.pkl
+notebooks/*.ipynb
