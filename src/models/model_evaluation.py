@@ -111,21 +111,21 @@ def log_confusion_matrix(cm, dataset_name):
     mlflow.log_artifact(cm_file_path)
     plt.close()
 
-def save_model_info(run_id: str, model_path: str, file_path: str) -> None:
-    """Save the model run ID and path to a JSON file."""
-    try:
-        # Create a dictionary with the info you want to save
-        model_info = {
-            'run_id': run_id,
-            'model_path': model_path
-        }
-        # Save the dictionary as a JSON file
-        with open(file_path, 'w') as file:
-            json.dump(model_info, file, indent=4)
-        logger.debug('Model info saved to %s', file_path)
-    except Exception as e:
-        logger.error('Error occurred while saving the model info: %s', e)
-        raise
+# def save_model_info(run_id: str, model_path: str, file_path: str) -> None:
+#     """Save the model run ID and path to a JSON file."""
+#     try:
+#         # Create a dictionary with the info you want to save
+#         model_info = {
+#             'run_id': run_id,
+#             'model_path': model_path
+#         }
+#         # Save the dictionary as a JSON file
+#         with open(file_path, 'w') as file:
+#             json.dump(model_info, file, indent=4)
+#         logger.debug('Model info saved to %s', file_path)
+#     except Exception as e:
+#         logger.error('Error occurred while saving the model info: %s', e)
+#         raise
 
 
 def main():
@@ -135,7 +135,7 @@ def main():
     
     run_name = f"model_evaluation_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 
-    with mlflow.start_run(run_name=run_name) as run:
+    with mlflow.start_run(run_name=run_name):
         try:
             # Load parameters from YAML file
             root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
@@ -162,22 +162,23 @@ def main():
             y_test = test_data['category'].values
 
             # Create a DataFrame for signature inference (using first few rows as an example)
-            input_example = pd.DataFrame(X_test_tfidf.toarray()[:5], columns=vectorizer.get_feature_names_out())  # <--- Added for signature
+            # input_example = pd.DataFrame(X_test_tfidf.toarray()[:5], columns=vectorizer.get_feature_names_out())  # <--- Added for signature
 
             # Infer the signature
-            signature = infer_signature(input_example, model.predict(X_test_tfidf[:5]))  # <--- Added for signature
+            # signature = infer_signature(input_example, model.predict(X_test_tfidf[:5]))  # <--- Added for signature
 
             # Log model with signature
             mlflow.sklearn.log_model(
                 model,
-                "lgbm_model",
-                signature=signature,  # <--- Added for signature
-                input_example=input_example  # <--- Added input example
+                "lgbm_model"
+                # signature=signature,  # <--- Added for signature
+                # input_example=input_example  # <--- Added input example
             )
 
             # Save model info
-            model_path = "lgbm_model"
-            save_model_info(run.info.run_id, model_path, 'experiment_info.json')
+            # artifact_uri = mlflow.get_artifact_uri()
+            # model_path = f"{artifact_uri}/lgbm_model"
+            # save_model_info(run.info.run_id, model_path, 'experiment_info.json')
 
             # Log the vectorizer as an artifact
             mlflow.log_artifact(os.path.join(root_dir, 'tfidf_vectorizer.pkl'))
