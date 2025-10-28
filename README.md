@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # yt-comment-sentiment-analysis
 A ML project to classify the sentiments of YouTube comments
 =======
@@ -59,4 +58,40 @@ Project Organization
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
->>>>>>> 7f3b30d (Initial commit)
+# yt-comment-sentiment-analysis
+
+A machine learning project to classify the sentiments of YouTube comments.
+This repo contains a DVC pipeline (ingestion → preprocessing → model building → evaluation), and can be extended into a Chrome plugin to surface sentiment in the UI.
+
+## Project Organization
+├── LICENSE
+├── Makefile
+├── README.md
+├── data
+│   ├── external
+│   ├── interim
+│   ├── processed
+│   └── raw
+├── docs
+├── models
+├── notebooks
+├── references
+├── reports
+│   └── figures
+├── requirements.txt
+├── setup.py
+├── dvc.yaml
+├── dvc.lock
+├── params.yaml
+├── src
+│   ├── init.py
+│   ├── data
+│   │   ├── data_ingestion.py
+│   │   └── data_preprocessing.py
+│   ├── models
+│   │   ├── model_building.py
+│   │   └── model_evaluation.py
+│   └── visualization
+└── tox.ini
+> Project structure based on the
+> [cookiecutter data science template](https://drivendata.github.io/cookiecutter-data-science/).

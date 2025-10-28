@@ -8,6 +8,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+.venv/
+myenv/
 build/
 develop-eggs/
 dist/
@@ -48,6 +50,7 @@ coverage.xml
 *.pot
 
 # Django stuff:
+# Django stuff
 *.log
 
 # Sphinx documentation
@@ -57,6 +60,8 @@ docs/_build/
 target/
 
 # DotEnv configuration
+
+# DotEnv
 .env
 
 # Database
@@ -67,6 +72,9 @@ target/
 .idea
 
 # VS Code
+
+# IDE
+.idea/
 .vscode/
 
 # Spyder
@@ -79,6 +87,13 @@ target/
 /data/
 
 # Mac OS-specific storage files
+# Jupyter
+.ipynb_checkpoints/
+
+# Exclude data by default (DVC will manage outs separately)
+data/
+
+# macOS
 .DS_Store
 
 # vim
@@ -87,5 +102,10 @@ target/
 
 # Mypy cache
 .mypy_cache/
+# MyPy
+.mypy_cache/
+
+# Local MLflow (if you use file:// tracking locally)
+mlruns/
 /lgbm_model.pkl
 /tfidf_vectorizer.pkl
