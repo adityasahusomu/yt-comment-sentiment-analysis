@@ -1,6 +1,4 @@
 [core]
     remote = myremote
-['remote "myremote"']
-    url = /Users/adityasahu/Desktop/Data_Science/Temp
-
+[remote "myremote"]
     url = s3://project1-mlflow-s3-bucket

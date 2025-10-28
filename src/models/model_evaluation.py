@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import json
 from mlflow.models import infer_signature
+from datetime import datetime
+
 
 # logging configuration
 logger = logging.getLogger('model_evaluation')
@@ -131,7 +133,9 @@ def main():
 
     mlflow.set_experiment('dvc-pipeline-runs')
     
-    with mlflow.start_run() as run:
+    run_name = f"model_evaluation_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+
+    with mlflow.start_run(run_name=run_name) as run:
         try:
             # Load parameters from YAML file
             root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
@@ -144,6 +148,11 @@ def main():
             # Load model and vectorizer
             model = load_model(os.path.join(root_dir, 'lgbm_model.pkl'))
             vectorizer = load_vectorizer(os.path.join(root_dir, 'tfidf_vectorizer.pkl'))
+
+            # loading model hypeerparameters
+            if hasattr(model, 'get_params'):
+                for param_name, param_value in model.get_params().items():
+                    mlflow.log_param(param_name, param_value)
 
             # Load test data for signature inference
             test_data = load_data(os.path.join(root_dir, 'data/interim/test_processed.csv'))
@@ -175,13 +184,9 @@ def main():
 
             # Evaluate model and get metrics
             report, cm = evaluate_model(model, X_test_tfidf, y_test)
-            from sklearn.metrics import classification_report
 
-            y_pred = model.predict(X_test_tfidf)
-            print("\n=== CLASSIFICATION REPORT ===")
-            print(classification_report(y_test, y_pred))
-            print("==============================\n")
-
+            if "accuracy" in report:
+                mlflow.log_metric("test_accuracy", report["accuracy"])
             # Log classification report metrics for the test data
             for label, metrics in report.items():
                 if isinstance(metrics, dict):
