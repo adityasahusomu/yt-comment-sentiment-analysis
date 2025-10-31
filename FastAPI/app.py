@@ -175,16 +175,27 @@ def predict(payload: dict):
         transformed = vectorizer.transform(preprocessed)
 
         raw_preds = model.predict(transformed)
-        preds = [str(p) for p in np.array(raw_preds).tolist()]
+        preds = [int(p) for p in np.array(raw_preds).tolist()]
 
-        response = []
+        # build per-comment result
+        detailed = []
         for c, s in zip(comments, preds):
-            response.append({
+            detailed.append({
                 "comment": c,
                 "sentiment": s
             })
 
-        return JSONResponse(content=response)
+        # build counts
+        sentiment_counts = {
+            "1": sum(1 for x in preds if x == 1),
+            "0": sum(1 for x in preds if x == 0),
+            "-1": sum(1 for x in preds if x == -1),
+        }
+
+        return JSONResponse(content={
+            "predictions": detailed,
+            "sentiment_counts": sentiment_counts
+        })
 
     except Exception as e:
         raise HTTPException(
