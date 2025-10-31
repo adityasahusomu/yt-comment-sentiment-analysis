@@ -13,12 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Python deps first for caching
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy source
 COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8003
 
