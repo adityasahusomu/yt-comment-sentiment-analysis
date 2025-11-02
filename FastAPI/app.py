@@ -17,7 +17,6 @@ import nltk
 
 
 # NLTK setup
-# ----
 nltk_packages = ["stopwords", "wordnet"]
 for pkg in nltk_packages:
     try:
@@ -33,10 +32,9 @@ from nltk.stem import WordNetLemmatizer
 # ----
 MLFLOW_TRACKING_URI = "http://ec2-3-135-238-101.us-east-2.compute.amazonaws.com:5000/"
 REGISTERED_MODEL_NAME = "yt_chrome_plugin_model"
-REGISTERED_MODEL_VERSION = "3"  # or "Staging" if you promoted it
+REGISTERED_MODEL_VERSION = "3" 
 VECTORIZER_PATH = "s3://project1-mlflow-bucket/1/0c56c31ba9c54ebb8c15044084e31fb4/artifacts/tfidf_vectorizer.pkl"
 
-# cache stopwords set once so we don't recompute on each request
 STOP_WORDS = set(stopwords.words("english")) - {"not", "but", "however", "no", "yet"}
 
 lemmatizer = WordNetLemmatizer()
@@ -44,7 +42,6 @@ sentiment_label_map = {-1: "Negative", 0: "Neutral", 1: "Positive"}
 
 
 # TEXT PREPROCESS
-# ----
 def preprocess_comment(comment: str) -> str:
   
     try:
@@ -63,7 +60,6 @@ def preprocess_comment(comment: str) -> str:
 
 
 # MODEL / VECTORIZER LOADING
-# --------
 def load_model_from_registry(model_name: str, model_version: str):
 
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
@@ -82,7 +78,6 @@ def load_vectorizer(path: str):
 
 
 # APP INIT
-# -----
 app = FastAPI(
     title="YouTube Comment Sentiment API",
     description="Predict sentiment, generate charts, wordclouds, and trend graphs.",
@@ -92,13 +87,12 @@ app = FastAPI(
 # CORS so browser extensions/frontends can call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten later if needed
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# We want these loaded once at startup:
 try:
     print(f"[startup] Loading model {REGISTERED_MODEL_NAME} version {REGISTERED_MODEL_VERSION} ...")
     model = load_model_from_registry(
@@ -115,8 +109,8 @@ except Exception as e:
     model = None
     vectorizer = None
 
-# ROUTES
 
+# ROUTES
 @app.get("/")
 def home():
     return {"message": "FastAPI sentiment service is live."}
