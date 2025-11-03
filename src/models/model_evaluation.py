@@ -145,6 +145,8 @@ def main():
             X_test_tfidf = vectorizer.transform(test_data['clean_comment'].values)
             y_test = test_data['category'].values
 
+            input_example = pd.DataFrame(X_test_tfidf.toarray()[:5], columns=vectorizer.get_feature_names_out())
+            signature = infer_signature(input_example, model.predict(X_test_tfidf[:5])) 
             # evaluate
             report, cm = evaluate_model(model, X_test_tfidf, y_test)
 
@@ -170,7 +172,9 @@ def main():
             # IMPORTANT: we are NOT registering here
             mlflow.sklearn.log_model(
                 sk_model=model,
-                artifact_path="lgbm_model"
+                artifact_path="lgbm_model", 
+                signature=signature,
+                input_example=input_example
             )
 
             # save run_id and the artifact subpath ("lgbm_model") for registration step
