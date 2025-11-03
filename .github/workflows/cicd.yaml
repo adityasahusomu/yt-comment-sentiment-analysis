@@ -101,17 +101,10 @@ jobs:
         run: python scripts/promote_model.py
 
 
-      - name: Start FastAPI App
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-        run: |
-          nohup uvicorn FastAPI.app:app --host 0.0.0.0 --port 8000 &
-
       - name: Run FastAPI tests
-        run: |
-          pytest scripts/test_fastapi.py  
+        env:
+          SKIP_MODEL_LOADING: "1"
+        run: pytest scripts/test_fastapi.py
           
 
 

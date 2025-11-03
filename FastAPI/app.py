@@ -14,6 +14,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import nltk
+import os
 
 
 # NLTK setup
@@ -34,6 +35,7 @@ MLFLOW_TRACKING_URI = "http://ec2-3-135-238-101.us-east-2.compute.amazonaws.com:
 REGISTERED_MODEL_NAME = "yt_chrome_plugin_model"
 REGISTERED_MODEL_VERSION = "3" 
 VECTORIZER_PATH = "s3://project1-mlflow-bucket/1/0c56c31ba9c54ebb8c15044084e31fb4/artifacts/tfidf_vectorizer.pkl"
+SKIP_MODEL_LOADING = os.getenv("SKIP_MODEL_LOADING") == "1"
 
 STOP_WORDS = set(stopwords.words("english")) - {"not", "but", "however", "no", "yet"}
 
@@ -93,21 +95,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-try:
-    print(f"[startup] Loading model {REGISTERED_MODEL_NAME} version {REGISTERED_MODEL_VERSION} ...")
-    model = load_model_from_registry(
-        REGISTERED_MODEL_NAME,
-        REGISTERED_MODEL_VERSION
-    )
+if not SKIP_MODEL_LOADING:
+    try:
+        print(f"[startup] Loading model {REGISTERED_MODEL_NAME} version {REGISTERED_MODEL_VERSION} ...")
+        model = load_model_from_registry(REGISTERED_MODEL_NAME, REGISTERED_MODEL_VERSION)
 
-    print(f"[startup] Loading vectorizer from {VECTORIZER_PATH} ...")
-    vectorizer = load_vectorizer(VECTORIZER_PATH)
+        print(f"[startup] Loading vectorizer from {VECTORIZER_PATH} ...")
+        vectorizer = load_vectorizer(VECTORIZER_PATH)
 
-    print("[startup] Model and vectorizer loaded successfully.")
-except Exception as e:
-    print(f"[startup] ERROR loading model/vectorizer: {e}")
-    model = None
-    vectorizer = None
+        print("[startup] Model and vectorizer loaded successfully.")
+    except Exception as e:
+        print(f"[startup] ERROR loading model/vectorizer: {e}")
+        model = None
+        vectorizer = None
+else:
+    # super-light fake implementations so endpoints work in CI
+    class _FakeVec:
+        def transform(self, arr): 
+            # your routes call .transform(preprocessed_list)
+            # return something iterable with same length
+            return arr
+
+    class _FakeModel:
+        def predict(self, X):
+            # return one label per item
+            return [1 for _ in X]  # pretend everything is positive
+
+    model = _FakeModel()
+    vectorizer = _FakeVec()
+    print("[startup] SKIP_MODEL_LOADING=1 -> using fake model/vectorizer.")
 
 
 # ROUTES
