@@ -2,7 +2,7 @@ import pytest
 import requests
 import json
 
-BASE_URL = "http://localhost:8000"  # Replace with your deployed URL if needed
+BASE_URL = "http://localhost:8000"
 
 def test_predict_endpoint():
     data = {
