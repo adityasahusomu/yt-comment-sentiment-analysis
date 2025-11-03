@@ -13,10 +13,30 @@ from app import app  # after env var is set
 client = TestClient(app)
 
 def test_predict_endpoint():
-    data = {"comments": ["This is a great product!", "Not worth the money.", "It's okay."]}
-    res = client.post("/predict", json=data)
-    assert res.status_code == 200
-    assert isinstance(res.json(), list)
+    data = {
+        "comments": ["This is a great product!", "Not worth the money.", "It's okay."]
+    }
+    response = client.post("/predict", json=data)  # or requests.post if you're starting a server
+    assert response.status_code == 200
+
+    payload = response.json()
+    # Top-level keys
+    assert isinstance(payload, dict)
+    assert "predictions" in payload
+    assert "sentiment_counts" in payload
+
+    # predictions list
+    preds = payload["predictions"]
+    assert isinstance(preds, list)
+    assert len(preds) == 3
+    for item in preds:
+        assert "comment" in item and "sentiment" in item
+
+    # counts object
+    counts = payload["sentiment_counts"]
+    assert set(counts.keys()) == {"1", "0", "-1"}
+    # integers as values
+    assert all(isinstance(v, int) for v in counts.values())
 
 def test_predict_with_timestamps_endpoint():
     data = {
