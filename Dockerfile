@@ -1,24 +1,22 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
-# System deps (keep minimal but practical for matplotlib/wordcloud)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# OS packages needed for LightGBM and wordcloud
+RUN apt-get update && apt-get install -y \
+    libgomp1 \
     build-essential \
-    curl \
-    libgl1 \
-    libglib2.0-0 \
-    libfreetype6 \
-    libjpeg-dev \
-    libpng-dev \
-  && rm -rf /var/lib/apt/lists/*
+    gcc \
+ && rm -rf /var/lib/apt/lists/*
 
-COPY . .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt /app/requirements.txt
+RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 
-EXPOSE 8003
+COPY FastAPI/ /app/
+COPY tfidf_vectorizer.pkl /app/tfidf_vectorizer.pkl
 
-# Run FastAPI app
-CMD ["python", "-m", "uvicorn", "FastAPI.app:app", "--host", "0.0.0.0", "--port", "8003"]
+RUN python -m nltk.downloader stopwords wordnet
 
+EXPOSE 8000
 
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
