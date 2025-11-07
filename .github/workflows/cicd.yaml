@@ -31,15 +31,14 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1  # Replace with your AWS region
-        run: |
+          AWS_DEFAULT_REGION: us-east-2  
           dvc repro
 
       - name: Push DVC-tracked data to remote
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1  # Replace with your AWS region
+          AWS_DEFAULT_REGION: us-east-2 
         run: |
           dvc push
 
@@ -72,7 +71,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-2
         run: |
           pytest scripts/test_load_model.py
 
@@ -80,7 +79,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-2
         run: |
           pytest scripts/test_model_signature.py
 
@@ -88,7 +87,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-2
         run: |
           pytest scripts/test_model_performance.py
 
@@ -97,7 +96,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-2
         run: python scripts/promote_model.py
 
 
@@ -111,7 +110,7 @@ jobs:
         run: |
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 547981474192.dkr.ecr.us-east-1.amazonaws.com
+          aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 547981474192.dkr.ecr.us-east-2.amazonaws.com
 
       - name: Build Docker image
         if: success()
@@ -121,12 +120,38 @@ jobs:
       - name: Tag Docker image
         if: success()
         run: |
-          docker tag yt-chrome-plugin:latest 547981474192.dkr.ecr.us-east-1.amazonaws.com/yt-chrome-plugin:latest
+          docker tag yt-chrome-plugin:latest 547981474192.dkr.ecr.us-east-2.amazonaws.com/yt-chrome-plugin:latest
 
       - name: Push Docker image to AWS ECR
         if: success()
         run: |
-          docker push 547981474192.dkr.ecr.us-east-1.amazonaws.com/yt-chrome-plugin:latest
+          docker push 547981474192.dkr.ecr.us-east-2.amazonaws.com/yt-chrome-plugin:latest
+
+      # Zip the required files
+      - name: Zip files for deployment
+        if: success()
+        run: |
+          zip -r deployment.zip appspec.yml deploy/scripts/install_dependencies.sh deploy/scripts/start_docker.sh
+
+      # Upload the ZIP file to S3
+      - name: Upload ZIP to S3
+        if: success()
+        run: |
+          aws s3 cp deployment.zip s3://project1-codedeploy-s3bucket/deployment.zip
+
+      # Deploy to AWS CodeDeploy using the uploaded ZIP file
+      - name: Deploy to AWS CodeDeploy
+        if: success()
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws deploy create-deployment \
+            --application-name YTChromePlugin \
+            --deployment-config-name CodeDeployDefault.OneAtATime \
+            --deployment-group-name YTChromePluginDeploymentGroup \
+            --s3-location bucket=project1-codedeploy-s3bucket,key=deployment.zip,bundleType=zip \
+            --file-exists-behavior OVERWRITE \
+            --region us-east-2
           
 
 
